@@ -1,0 +1,26 @@
+[package]
+name = "payrust"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "PayPal REST API client for Rust"
+keywords = ["paypal", "payment", "api", "checkout", "rest"]
+categories = ["api-bindings", "web-programming"]
+readme = "README.md"
+
+[dependencies]
+reqwest = { version = "0.12", features = ["json"] }
+tokio = { version = "1", features = ["sync", "time"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+base64 = "0.22"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full", "macros"] }
+dotenvy = "0.15"
+
+[features]
+default = []
+rustls = ["reqwest/rustls-tls"]
+native-tls = ["reqwest/native-tls"]
