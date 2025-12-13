@@ -7,6 +7,9 @@ description = "PayPal REST API client for Rust"
 keywords = ["paypal", "payment", "api", "checkout", "rest"]
 categories = ["api-bindings", "web-programming"]
 readme = "README.md"
+repository = "https://github.com/Nonanti/payrust"
+homepage = "https://github.com/Nonanti/payrust"
+documentation = "https://docs.rs/payrust"
 
 [dependencies]
 reqwest = { version = "0.12", features = ["json"] }
