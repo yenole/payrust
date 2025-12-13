@@ -1,7 +1,6 @@
 # payrust
 
 [![Crates.io](https://img.shields.io/crates/v/payrust.svg)](https://crates.io/crates/payrust)
-[![Documentation](https://docs.rs/payrust/badge.svg)](https://docs.rs/payrust)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 PayPal REST API client for Rust.
