@@ -47,6 +47,13 @@ struct TokenResponse {
     expires_in: u64,
 }
 
+#[derive(Debug, Deserialize)]
+struct ClientTokenResponse {
+    pub client_token: String,
+    #[allow(dead_code)]
+    pub expires_in: usize,
+}
+
 #[derive(Clone)]
 pub struct PayPal {
     inner: Arc<PayPalInner>,
@@ -216,6 +223,17 @@ impl PayPal {
         let response = self.inner.client.get(&url).headers(headers).send().await?;
 
         self.handle_response(response).await
+    }
+
+    pub async fn client_token(&self) -> Result<String> {
+        let url = format!(
+            "{}/v1/identity/generate-token",
+            self.inner.environment.base_url()
+        );
+        let headers = self.auth_headers().await?;
+        let response = self.inner.client.post(&url).headers(headers).send().await?;
+        let token: ClientTokenResponse = self.handle_response(response).await?;
+        Ok(token.client_token)
     }
 
     pub async fn capture(&self, order_id: &str) -> Result<Order> {
