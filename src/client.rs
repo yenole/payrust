@@ -212,7 +212,7 @@ impl PayPal {
         self.handle_response(response).await
     }
 
-    pub async fn get_order(&self, order_id: &str) -> Result<Order> {
+    async fn get_order(&self, order_id: &str) -> Result<Order> {
         let url = format!(
             "{}/v2/checkout/orders/{}",
             self.inner.environment.base_url(),
@@ -234,6 +234,39 @@ impl PayPal {
         let response = self.inner.client.post(&url).headers(headers).send().await?;
         let token: ClientTokenResponse = self.handle_response(response).await?;
         Ok(token.client_token)
+    }
+
+    pub async fn client_token_v6(&self) -> Result<String> {
+        let url = format!("{}/v1/oauth2/token", self.inner.environment.base_url());
+
+        let credentials = base64::Engine::encode(
+            &base64::engine::general_purpose::STANDARD,
+            format!("{}:{}", self.inner.client_id, self.inner.client_secret),
+        );
+
+        let response = self
+            .inner
+            .client
+            .post(&url)
+            .header(AUTHORIZATION, format!("Basic {}", credentials))
+            .header(CONTENT_TYPE, "application/x-www-form-urlencoded")
+            .body("grant_type=client_credentials&response_type=client_token")
+            .send()
+            .await?;
+
+        if !response.status().is_success() {
+            let error: ApiErrorResponse = response.json().await?;
+            return Err(error.into());
+        }
+
+        let token_response: TokenResponse = response.json().await?;
+
+        let access_token = AccessToken {
+            token: token_response.access_token,
+            expires_at: std::time::Instant::now()
+                + std::time::Duration::from_secs(token_response.expires_in),
+        };
+        Ok(access_token.token)
     }
 
     pub async fn capture(&self, order_id: &str) -> Result<Order> {
