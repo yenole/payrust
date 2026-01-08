@@ -34,6 +34,7 @@ pub struct PurchaseUnit {
     pub invoice_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub soft_descriptor: Option<String>,
+    #[serde(default)]
     pub amount: PurchaseAmount,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub items: Option<Vec<Item>>,

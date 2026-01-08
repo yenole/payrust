@@ -11,6 +11,7 @@ repository = "https://github.com/Nonanti/payrust"
 homepage = "https://github.com/Nonanti/payrust"
 documentation = "https://docs.rs/payrust"
 
+
 [dependencies]
 reqwest = { version = "0.12", features = ["json"] }
 tokio = { version = "1", features = ["sync", "time"] }
@@ -25,5 +26,6 @@ dotenvy = "0.15"
 
 [features]
 default = []
+v6 = []
 rustls = ["reqwest/rustls-tls"]
 native-tls = ["reqwest/native-tls"]

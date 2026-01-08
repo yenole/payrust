@@ -122,6 +122,7 @@ impl WebhookHeaders {
 }
 
 #[derive(Debug, Serialize)]
+#[allow(dead_code)]
 pub(crate) struct VerifyWebhookRequest {
     pub webhook_id: String,
     pub transmission_id: String,

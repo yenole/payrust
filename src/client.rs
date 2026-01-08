@@ -6,8 +6,8 @@ use tokio::sync::RwLock;
 use crate::api::OrderBuilder;
 use crate::error::{ApiErrorResponse, Error, Result};
 use crate::models::{
-    CaptureOrderRequest, CreateOrderRequest, Order, Refund, RefundRequest, VerifyWebhookRequest,
-    VerifyWebhookResponse, WebhookEvent, WebhookHeaders,
+    CaptureOrderRequest, CreateOrderRequest, Order, Refund, RefundRequest, VerifyWebhookResponse,
+    WebhookEvent, WebhookHeaders,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -225,6 +225,7 @@ impl PayPal {
         self.handle_response(response).await
     }
 
+    #[cfg(not(feature = "v6"))]
     pub async fn client_token(&self) -> Result<String> {
         let url = format!(
             "{}/v1/identity/generate-token",
@@ -236,7 +237,8 @@ impl PayPal {
         Ok(token.client_token)
     }
 
-    pub async fn client_token_v6(&self) -> Result<String> {
+    #[cfg(feature = "v6")]
+    pub async fn client_token(&self) -> Result<String> {
         let url = format!("{}/v1/oauth2/token", self.inner.environment.base_url());
 
         let credentials = base64::Engine::encode(
@@ -331,16 +333,22 @@ impl PayPal {
             .ok_or_else(|| Error::WebhookVerification("Webhook ID not set".into()))?;
 
         let webhook_event: serde_json::Value = serde_json::from_str(body)?;
-
-        let verify_request = VerifyWebhookRequest {
-            webhook_id: webhook_id.clone(),
-            transmission_id: webhook_headers.transmission_id,
-            transmission_time: webhook_headers.transmission_time,
-            cert_url: webhook_headers.cert_url,
-            auth_algo: webhook_headers.auth_algo,
-            transmission_sig: webhook_headers.transmission_sig,
-            webhook_event: webhook_event.clone(),
-        };
+        let verify_request = format!(
+            r#"{{"webhook_id":"{}",
+            "transmission_id": "{}",
+            "transmission_time": "{}",
+            "cert_url": "{}",
+            "auth_algo": "{}",
+            "transmission_sig": "{}",
+            "webhook_event":{}}}"#,
+            webhook_id.clone(),
+            webhook_headers.transmission_id,
+            webhook_headers.transmission_time,
+            webhook_headers.cert_url,
+            webhook_headers.auth_algo,
+            webhook_headers.transmission_sig,
+            body
+        );
 
         let url = format!(
             "{}/v1/notifications/verify-webhook-signature",
@@ -353,12 +361,12 @@ impl PayPal {
             .client
             .post(&url)
             .headers(headers)
-            .json(&verify_request)
+            .header("Content_Type", "application/json")
+            .body(verify_request)
             .send()
             .await?;
 
         let verify_response: VerifyWebhookResponse = self.handle_response(response).await?;
-
         if !verify_response.is_success() {
             return Err(Error::WebhookVerification(
                 "Signature verification failed".into(),
