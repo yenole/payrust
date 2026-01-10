@@ -73,24 +73,28 @@ impl PayPal {
         client_id: impl Into<String>,
         client_secret: impl Into<String>,
     ) -> Result<Self> {
-        Self::new(client_id, client_secret, Environment::Sandbox).await
+        Self::new(client_id, client_secret, Environment::Sandbox, None).await
     }
 
     pub async fn live(
         client_id: impl Into<String>,
         client_secret: impl Into<String>,
     ) -> Result<Self> {
-        Self::new(client_id, client_secret, Environment::Live).await
+        Self::new(client_id, client_secret, Environment::Live, None).await
     }
 
     pub async fn new(
         client_id: impl Into<String>,
         client_secret: impl Into<String>,
         environment: Environment,
+        client: Option<reqwest::Client>,
     ) -> Result<Self> {
-        let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(30))
-            .build()?;
+        let client = match client {
+            Some(v) => v,
+            None => reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(30))
+                .build()?,
+        };
 
         let paypal = Self {
             inner: Arc::new(PayPalInner {
